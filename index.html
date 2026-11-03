@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dino Dig Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f6efe1;
+  --paper-2: #efe4cf;
+  --card: #fffaf0;
+  --ink: #2b241c;
+  --ink-soft: #6b5d4c;
+  --line: #cdbb9c;
+  --dig: #c98a3b;
+  --dig-tint: #f3dfc0;
+  --museum: #4f7aa8;
+  --museum-tint: #d9e4f0;
+  --tour: #4f8a4a;
+  --tour-tint: #dbead4;
+  --accent: #b5482f;
+  --focus: #b5482f;
+  --shadow: 0 2px 0 rgba(60, 40, 20, .12), 0 6px 18px rgba(60, 40, 20, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1d1914;
+    --paper-2: #26211a;
+    --card: #2a241c;
+    --ink: #f1e7d6;
+    --ink-soft: #b9a98f;
+    --line: #4a3f31;
+    --dig: #e0a457;
+    --dig-tint: #4a3622;
+    --museum: #7fa6d1;
+    --museum-tint: #263546;
+    --tour: #7fbd78;
+    --tour-tint: #263b25;
+    --accent: #e57b5f;
+    --focus: #e57b5f;
+    --shadow: 0 2px 0 rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1d1914;
+  --paper-2: #26211a;
+  --card: #2a241c;
+  --ink: #f1e7d6;
+  --ink-soft: #b9a98f;
+  --line: #4a3f31;
+  --dig: #e0a457;
+  --dig-tint: #4a3622;
+  --museum: #7fa6d1;
+  --museum-tint: #263546;
+  --tour: #7fbd78;
+  --tour-tint: #263b25;
+  --accent: #e57b5f;
+  --focus: #e57b5f;
+  --shadow: 0 2px 0 rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-image: radial-gradient(var(--line) 0.6px, transparent 0.6px);
+  background-size: 22px 22px;
+}
+.hand { font-family: "Patrick Hand", "Comic Sans MS", cursive; font-weight: 400; }
+h1, h2, h3 { font-family: "Patrick Hand", "Comic Sans MS", cursive; font-weight: 400; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); }
+h2 { font-size: 1.9rem; margin-bottom: .35rem; }
+h3 { font-size: 1.35rem; }
+p { margin: 0 0 .6rem; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+section { margin: 48px 0; }
+.lede { color: var(--ink-soft); max-width: 62ch; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* Header */
+header { padding: 40px 0 8px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; color: var(--ink-soft); margin-bottom: 6px; }
+.tagline { font-family: "Patrick Hand", cursive; font-size: 1.45rem; color: var(--accent); margin: 6px 0 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 3px 12px; font-size: .88rem; }
+.chip b { font-weight: 600; }
+
+/* Loop */
+.loop-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ring {
+  position: relative;
+  aspect-ratio: 600 / 500;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+.ring svg.ring-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ring-track { fill: none; stroke: var(--line); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; }
+.ring-arrow { fill: var(--ink-soft); }
+.ring-marker { fill: var(--accent); transition: cx .6s ease, cy .6s ease; }
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 27%;
+  min-height: 64px;
+  padding: 8px 10px;
+  border-radius: 16px 14px 18px 12px;
+  border: 2px solid var(--mode);
+  background: var(--mode-tint);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform .2s ease, background .2s ease;
+}
+.node .num { display: block; font-size: .75rem; color: var(--ink-soft); letter-spacing: .08em; }
+.node .label { display: block; font-family: "Patrick Hand", cursive; font-size: clamp(1rem, 1.9vw, 1.25rem); line-height: 1.1; }
+.node:hover { transform: translate(-50%, -50%) scale(1.04); }
+.node[aria-pressed="true"] { background: var(--mode); color: var(--paper); transform: translate(-50%, -50%) scale(1.07); }
+.node[aria-pressed="true"] .num { color: inherit; opacity: .85; }
+.mode-dig { --mode: var(--dig); --mode-tint: var(--dig-tint); }
+.mode-museum { --mode: var(--museum); --mode-tint: var(--museum-tint); }
+.mode-tour { --mode: var(--tour); --mode-tint: var(--tour-tint); }
+.mode-meta { --mode: var(--accent); --mode-tint: var(--paper-2); }
+.ring-center {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 40%; text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center;
+}
+.legend { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; text-align: left; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--mode); margin-right: 6px; vertical-align: -1px; }
+.btn {
+  border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+  border-radius: 999px; padding: 6px 16px; cursor: pointer; font-family: "Patrick Hand", cursive; font-size: 1.1rem;
+}
+.btn:hover { background: var(--accent); border-color: var(--accent); }
+.hint { font-size: .8rem; color: var(--ink-soft); }
+
+/* Detail panel */
+.panel {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; padding: 20px 22px;
+  box-shadow: var(--shadow); border-top: 8px solid var(--mode);
+}
+.panel .mode-tag { display: inline-block; font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; background: var(--mode-tint); border-radius: 999px; padding: 2px 10px; margin-bottom: 6px; }
+.panel .fantasy { font-family: "Patrick Hand", cursive; font-size: 1.35rem; color: var(--accent); margin: 6px 0 12px; }
+.panel h4 { margin: 14px 0 4px; font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); }
+.panel ul { margin: 0; padding-left: 1.1rem; }
+.panel li { margin: 2px 0; }
+.ds { display: inline-block; font-size: .7rem; border: 1px solid var(--museum); color: var(--museum); border-radius: 4px; padding: 0 5px; margin-right: 4px; vertical-align: 1px; }
+.beat { display: flex; align-items: center; gap: 10px; }
+.dots { display: flex; gap: 4px; }
+.dots i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--accent); }
+.dots i.on { background: var(--accent); }
+.feeds { margin-top: 12px; font-size: .88rem; padding: 8px 12px; background: var(--paper-2); border-radius: 10px; }
+
+/* Emotion curve */
+.curve-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; padding: 16px 18px 8px; box-shadow: var(--shadow); }
+.curve-card svg { width: 100%; height: auto; display: block; }
+.curve-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.curve-area { fill: var(--accent); opacity: .1; }
+.curve-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; }
+.curve-pt { fill: var(--card); stroke: var(--accent); stroke-width: 2.5; cursor: pointer; transition: r .2s; }
+.curve-pt.active { fill: var(--accent); }
+.curve-lbl { fill: var(--ink-soft); font-size: 13px; font-family: "Patrick Hand", cursive; text-anchor: middle; }
+.curve-lbl.active { fill: var(--ink); font-size: 15px; }
+.curve-axis { fill: var(--ink-soft); font-size: 11px; }
+
+/* Transformation */
+.transform { background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; padding: 20px; box-shadow: var(--shadow); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.stage-art { position: relative; aspect-ratio: 4 / 3; background: var(--paper-2); border-radius: 16px; overflow: hidden; }
+.stage-art svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .5s ease; }
+.stage-art .ink { stroke: var(--ink); fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.stage-art .bone { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+.stage-art .dirt { fill: var(--dig); opacity: .35; }
+.stage-art .grass { stroke: var(--tour); fill: none; stroke-width: 4; stroke-linecap: round; }
+.stage-art .dino { fill: var(--tour); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.stage-art .pedestal { fill: var(--museum); opacity: .45; }
+.stages { display: flex; justify-content: space-between; font-family: "Patrick Hand", cursive; font-size: 1.1rem; margin-top: 6px; }
+.stages span { color: var(--ink-soft); cursor: pointer; }
+.stages span.on { color: var(--accent); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.stage-copy h3 { color: var(--accent); }
+
+/* Pillars */
+.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pillar { background: var(--card); border: 1.5px solid var(--line); border-radius: 20px 16px 22px 14px; padding: 18px; box-shadow: var(--shadow); }
+.pillar .icon { font-size: 1.9rem; }
+.pillar p { color: var(--ink-soft); font-size: .95rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag { border: 1.5px solid var(--mode); background: var(--mode-tint); border-radius: 999px; font-size: .8rem; padding: 1px 10px; cursor: pointer; }
+
+/* Questions */
+.qs { background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; padding: 10px 20px; box-shadow: var(--shadow); }
+.qgroup { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.qgroup:last-child { border-bottom: 0; }
+.qgroup h3 { font-size: 1.15rem; margin-bottom: 4px; }
+.qgroup label { display: flex; gap: 10px; align-items: flex-start; padding: 4px 0; cursor: pointer; }
+.qgroup input { margin-top: 5px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
+.qgroup label.done span { text-decoration: line-through; color: var(--ink-soft); }
+.progress { display: flex; align-items: center; gap: 12px; margin: 6px 0 14px; font-size: .9rem; color: var(--ink-soft); }
+.bar { flex: 1; max-width: 260px; height: 8px; background: var(--paper-2); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+
+footer { color: var(--ink-soft); font-size: .85rem; padding: 24px 0 48px; }
+.theme-toggle { position: fixed; top: 12px; right: 12px; border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: .85rem; z-index: 5; }
+
+/* Narrow layout */
+@media (max-width: 860px) {
+  .loop-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .ring { aspect-ratio: auto; padding: 16px; display: flex; flex-direction: column; gap: 22px; }
+  .ring svg.ring-svg { display: none; }
+  .node { position: relative; left: auto !important; top: auto !important; transform: none; width: 100%; }
+  .node:hover, .node[aria-pressed="true"] { transform: none; }
+  .node:not(.last)::after { content: "↓"; position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); color: var(--ink-soft); font-size: 1rem; }
+  .node.last::after { content: "↺ back to 1"; position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); color: var(--ink-soft); font-size: .8rem; white-space: nowrap; }
+  .ring-center { position: static; transform: none; width: 100%; order: -1; margin-bottom: 4px; }
+  .legend { flex-direction: row; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .transform { grid-template-columns: minmax(0, 1fr); }
+  .pillars { grid-template-columns: minmax(0, 1fr); }
+  .curve-lbl { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light or dark theme">◐ Theme</button>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Creative Director review · Core loop · Concept v0.1</div>
+    <h1>Dino Dig <span style="color:var(--ink-soft);font-size:.55em">(working title)</span></h1>
+    <p class="tagline">“Dinosaurs are not dead as long as someone still cares!”</p>
+    <div class="chips">
+      <span class="chip"><b>Audience</b> · boys 5–10, love the outdoors</span>
+      <span class="chip"><b>Genre</b> · Adventure: dinosaurs</span>
+      <span class="chip"><b>Platform</b> · PS5 (DualSense)</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="loop-h">
+    <h2 id="loop-h">The core loop</h2>
+    <p class="lede">Click a step, or use the arrow keys, to see the player fantasy, the moment-to-moment verbs, the emotional beat and what is still undecided. Colours show which of the three modes from the sketches (Dig Site, Museum, Virtual Tour) the step belongs to.</p>
+
+    <div class="loop-layout">
+      <div class="ring" id="ring" role="group" aria-label="Core loop steps">
+        <svg class="ring-svg" viewBox="0 0 600 500" aria-hidden="true" id="ringSvg"></svg>
+        <div class="ring-center">
+          <div class="legend">
+            <span class="mode-dig">Dig Site</span>
+            <span class="mode-museum">Museum</span>
+            <span class="mode-tour">Virtual Tour</span>
+            <span class="mode-meta">Meta / progression</span>
+          </div>
+          <button class="btn" id="playBtn" type="button">▶ Play the loop</button>
+          <div class="hint">← → to step through</div>
+        </div>
+      </div>
+
+      <article class="panel" id="panel" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section aria-labelledby="curve-h">
+    <h2 id="curve-h">Emotion curve, one lap</h2>
+    <p class="lede">How intense each step is meant to feel (1 = calm, 5 = peak). Click a point to jump to that step. Small kids need short, regular payoffs, so look for a gentle rise and one clear peak with no long flat stretch.</p>
+    <div class="curve-card"><svg id="curve" viewBox="0 0 700 200" role="img" aria-label="Emotional intensity across the six loop steps"></svg></div>
+  </section>
+
+  <section aria-labelledby="tf-h">
+    <h2 id="tf-h">The transformation fantasy</h2>
+    <p class="lede">From Frame 1 of the sketches, this is the promise the whole loop has to keep. Drag the slider.</p>
+    <div class="transform">
+      <div>
+        <div class="stage-art" id="stageArt">
+          <!-- Stage 0: bone in the dirt -->
+          <svg viewBox="0 0 400 300" data-stage="0" aria-hidden="true">
+            <path class="dirt" d="M0 170 Q100 150 200 165 T400 160 V300 H0Z"/>
+            <g transform="translate(200 215) rotate(-8)">
+              <rect class="bone" x="-80" y="-11" width="160" height="22" rx="8"/>
+              <circle class="bone" cx="-88" cy="-12" r="15"/><circle class="bone" cx="-88" cy="12" r="15"/>
+              <circle class="bone" cx="88" cy="-12" r="15"/><circle class="bone" cx="88" cy="12" r="15"/>
+              <rect x="-78" y="-9" width="156" height="18" rx="7" fill="var(--card)"/>
+            </g>
+            <path class="ink" d="M250 60 L235 150 M228 150 h20 l-6 22 h-8z" />
+            <path class="ink" d="M150 120 l-10 -10 M160 112 l-4 -14 M138 132 l-14 -4" opacity=".6"/>
+          </svg>
+          <!-- Stage 1: skeleton on a pedestal -->
+          <svg viewBox="0 0 400 300" data-stage="1" aria-hidden="true" style="opacity:0">
+            <rect class="pedestal" x="70" y="250" width="260" height="22" rx="6"/>
+            <path class="ink" d="M120 250 V200 M260 250 V200"/>
+            <path class="ink" d="M60 175 Q120 140 190 150 Q240 155 280 120"/>
+            <path class="ink" d="M150 148 v26 M165 150 v30 M180 151 v32 M195 151 v32 M210 150 v30 M225 147 v26"/>
+            <path class="ink" d="M120 165 L110 205 L125 235 M250 140 L262 200 L250 235"/>
+            <path class="ink" d="M280 120 q10 -40 50 -35 q20 4 15 22 l-30 4 l25 6 q-5 14 -30 12 z"/>
+            <circle cx="318" cy="96" r="4" fill="var(--ink)"/>
+            <path class="ink" d="M262 150 l18 14 l6 -6 M258 162 l14 14"/>
+          </svg>
+          <!-- Stage 2: living dino in the wilds -->
+          <svg viewBox="0 0 400 300" data-stage="2" aria-hidden="true" style="opacity:0">
+            <path d="M0 255 Q200 235 400 255 V300 H0Z" fill="var(--tour)" opacity=".3"/>
+            <path class="grass" d="M40 255 q-6 -40 6 -70 M52 255 q4 -30 -10 -50 M64 255 q8 -45 22 -60 M350 255 q-4 -60 10 -110 q10 30 -2 60 M360 255 q10 -35 26 -50 M338 255 q-10 -30 -24 -40"/>
+            <path class="dino" d="M70 200 Q140 160 200 165 Q245 168 262 135 Q270 95 305 92 Q345 90 350 112 L322 118 L345 126 Q335 142 300 140 Q290 165 275 185 L285 250 L268 252 L258 205 Q235 215 210 215 L215 250 L197 252 L188 214 Q150 210 70 200Z"/>
+            <circle cx="318" cy="104" r="4" fill="var(--ink)"/>
+            <path class="ink" d="M285 160 l16 12 M281 168 l12 14" style="stroke-width:3"/>
+            <path class="ink" d="M40 220 l20 0 M30 235 l26 0" opacity=".5" style="stroke-width:3"/>
+          </svg>
+        </div>
+        <input type="range" id="stageSlider" min="0" max="2" step="1" value="0" aria-label="Transformation stage">
+        <div class="stages" id="stageLabels"><span data-s="0" class="on">Fossil</span><span data-s="1">Skeleton</span><span data-s="2">Living dino</span></div>
+      </div>
+      <div class="stage-copy" id="stageCopy"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="pillars-h">
+    <h2 id="pillars-h">Creative pillars</h2>
+    <p class="lede">Three rules to check every feature against. The tags show which loop steps carry each pillar; click one to jump to that step.</p>
+    <div class="pillars" id="pillars"></div>
+  </section>
+
+  <section aria-labelledby="qs-h">
+    <h2 id="qs-h">Open creative questions</h2>
+    <p class="lede">Everything still undecided, grouped by loop step. Tick items off as they are decided. Ticks are saved in this browser only.</p>
+    <div class="progress"><span id="qCount">0 / 0 decided</span><div class="bar"><i id="qBar"></i></div><button class="chip" id="qReset" type="button" style="cursor:pointer">Reset</button></div>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <footer>Built from concept sketches (Frames 1–3). All content is a first-pass proposal for discussion, not a locked design.</footer>
+</div>
+
+<script>
+const MODES = {
+  dig: { name: "Dig Site", cls: "mode-dig" },
+  museum: { name: "Museum", cls: "mode-museum" },
+  tour: { name: "Virtual Tour", cls: "mode-tour" },
+  meta: { name: "Progression", cls: "mode-meta" }
+};
+
+const STEPS = [
+  {
+    id: "choose", label: "Choose Location", mode: "meta", intensity: 2,
+    fantasy: "“Where will I explore today?”",
+    does: [
+      "Spin a big chunky globe or field map and pick a dig site: desert canyon, riverbank, icy cliff.",
+      "Each site shows a silhouette of the mystery dino that's hiding there.",
+      ["ds", "The light bar glows in the colour of that site's era as you hover it."]
+    ],
+    beat: "Curiosity, anticipation",
+    kids: [
+      "Pick by picture, not text. Voice-over names each place.",
+      "At most 3 choices on screen at once, so a 5-year-old isn't overwhelmed.",
+      "Real-world outdoor places (Montana badlands, Gobi) tie into the outdoors interest."
+    ],
+    questions: [
+      "Do we show the dino silhouette up front, or keep it a full surprise?",
+      "Real-world map vs. a stylised fantasy map?",
+      "Is there a player character (kid paleontologist) we see here, or is it first-person?"
+    ]
+  },
+  {
+    id: "dig", label: "Dig Out a Bone", mode: "dig", intensity: 3,
+    fantasy: "“I'm a real dinosaur hunter with a real shovel!”",
+    does: [
+      "Pick a spot, then shovel, pick-axe and chisel through layers of dirt and rock.",
+      ["ds", "Adaptive triggers: the shovel gets stiffer in hard rock and softer in sand."],
+      ["ds", "Haptic 'tink' through the controller when the tool touches bone."],
+      "Little surprises along the way: beetles, old coins, ammonites."
+    ],
+    beat: "Effort, a building hunch (\"something's down here...\")",
+    kids: [
+      "You can't break the fossil by digging too hard. It's forgiving and messy-fun.",
+      "Sessions of 2–4 minutes per bone.",
+      "Over-the-top dirt particles. Kids love making a mess."
+    ],
+    questions: [
+      "Should a careless dig cost something (a cracked bone), or never punish?",
+      "How do we guide where to dig: a sniffing dog companion, a metal-detector beep, or a hint glow?",
+      "How many bones per site before it feels like a chore?"
+    ]
+  },
+  {
+    id: "clear", label: "Clear the Bone", mode: "dig", intensity: 4,
+    fantasy: "“Whoa, look what I found!”",
+    does: [
+      "Brush and blow the dust away to reveal the full bone. This is the 'unwrapping a present' moment.",
+      ["ds", "Touchpad swipes to brush. The haptics get lighter as the bone comes clean."],
+      "A fact card pops up: the bone's name, which dino it came from, and a fun fact read aloud."
+    ],
+    beat: "Reveal and pride. The first small payoff of the lap.",
+    kids: [
+      "Big glow, fanfare and a sticker reward on reveal.",
+      "Fun facts are spoken, at most one sentence, and silly when possible (“this tooth was as big as a banana!”)."
+    ],
+    questions: [
+      "Is clearing a separate mini-game, or folded into digging?",
+      "How 'educational' is the tone: field-guide accurate, or cartoon-fun first?"
+    ],
+    feeds: "Feeds into Unlock New Dig Location: every cleared bone adds progress (Frame 2 branch)."
+  },
+  {
+    id: "assemble", label: "Assemble Dinosaur", mode: "museum", intensity: 4,
+    fantasy: "“I'm building my own dinosaur museum!”",
+    does: [
+      "Bring the bones back to your Museum and snap them onto a skeleton frame like a 3D puzzle.",
+      "Missing bones show as glowing outlines. That's the reason to go back to the dig.",
+      "Decorate the hall: plaques, lights, visitors who cheer."
+    ],
+    beat: "Mastery and ownership (\"MY museum\")",
+    kids: [
+      "Bones magnet-snap into place when close enough. No fine motor frustration.",
+      "The museum is a persistent show-off space: “Look, Dad, I built a T-rex!”"
+    ],
+    questions: [
+      "Can a dino be assembled wrong for laughs (a tail on the head), or only correctly?",
+      "Museum as hub world vs. a menu screen?",
+      "How much decorating and customising, and does it compete with the dig for time?"
+    ],
+    feeds: "Feeds into Unlock New Dig Location: each finished skeleton is a big progress jump."
+  },
+  {
+    id: "biome", label: "Unlock Biome: Virtual Tour", mode: "tour", intensity: 5,
+    fantasy: "“I AM the dinosaur!”",
+    does: [
+      "The finished skeleton comes alive. You step into it and run, stomp and roar through its prehistoric biome.",
+      "Explore freely: chase dragonflies, splash in rivers, meet other dinos from that era.",
+      ["ds", "Heavy stomps rumble through the haptics. Press R2 to ROAR, with speaker sound from the controller."]
+    ],
+    beat: "Peak power fantasy and wonder. The payoff of the whole lap.",
+    kids: [
+      "No fail state: you can't die, you just explore.",
+      "Short, open play (5–8 min) with optional 'find 3 things' goals.",
+      "Lush outdoor nature to match the audience's love of the outdoors."
+    ],
+    questions: [
+      "Do carnivores hunt? How do we handle predator/prey for ages 5–10?",
+      "Is the biome a sandbox or a guided 'tour' with a narrator?",
+      "Can you revisit biomes any time from the Museum?"
+    ],
+    feeds: "Feeds into Unlock New Dig Location: discoveries made as the dino reveal clues to the next site."
+  },
+  {
+    id: "newsite", label: "Unlock New Dig Location", mode: "meta", intensity: 3,
+    fantasy: "“There's more out there to find!”",
+    does: [
+      "Progress from Clear, Assemble and Biome fills a field-journal page. When it's full, a new site appears on the map.",
+      "Each new site teases a new era (Triassic, Jurassic, Cretaceous) and new tools."
+    ],
+    beat: "Satisfaction plus a new hook. It closes the lap and opens the next one.",
+    kids: [
+      "Clear visual progress meter (bones collected) with no numbers needed.",
+      "Always show what's next, so there's no 'what do I do now?' moment."
+    ],
+    questions: [
+      "Linear site unlocks or a branching map?",
+      "Do new tools (drill, X-ray goggles) come with sites, or with skeleton completion?",
+      "What's the 'final' dino or end-goal of the campaign?"
+    ]
+  }
+];
+
+const PILLARS = [
+  { icon: "🧢", title: "You're a real paleontologist", text: "Tools, techniques and facts feel authentic. Kids should leave knowing real dino names and how digs work, without it ever feeling like school.", steps: ["dig", "clear", "choose"] },
+  { icon: "🦴", title: "Every bone tells a story", text: "No bone is just loot. Each one has a reveal moment, a fact, and a visible place in the skeleton you're building.", steps: ["clear", "assemble", "newsite"] },
+  { icon: "🦖", title: "Run with the dinos", text: "The reward for caring is bringing them back to life. Being the dinosaur is the emotional peak and the hook for the trailer.", steps: ["biome", "assemble"] }
+];
+
+const STAGES = [
+  { title: "Fossil", text: "A mystery in the dirt. The player only sees a hint, and the controller tells them they're close. This is curiosity and effort." },
+  { title: "Skeleton", text: "Bones become a recognisable creature in the player's own museum. This is pride and ownership: “I built that.”" },
+  { title: "Living dino", text: "The skeleton wakes up and the player becomes it, running through a long-gone wild. This is wonder: the reason the tagline is true." }
+];
+
+const $ = (s, r = document) => r.querySelector(s);
+const svgNS = "http://www.w3.org/2000/svg";
+let current = 0;
+
+/* ---------- Ring ---------- */
+const CX = 300, CY = 250, RX = 225, RY = 185;
+function pos(i, n = STEPS.length) {
+  const a = -Math.PI / 2 + (i / n) * Math.PI * 2;
+  return { x: CX + RX * Math.cos(a), y: CY + RY * Math.sin(a), a };
+}
+function buildRing() {
+  const svg = $("#ringSvg");
+  const track = document.createElementNS(svgNS, "ellipse");
+  track.setAttribute("cx", CX); track.setAttribute("cy", CY);
+  track.setAttribute("rx", RX); track.setAttribute("ry", RY);
+  track.setAttribute("class", "ring-track");
+  svg.appendChild(track);
+  // arrowheads at midpoints between nodes (clockwise)
+  STEPS.forEach((_, i) => {
+    const t = -Math.PI / 2 + ((i + 0.5) / STEPS.length) * Math.PI * 2;
+    const x = CX + RX * Math.cos(t), y = CY + RY * Math.sin(t);
+    const dx = -RX * Math.sin(t), dy = RY * Math.cos(t);
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    const p = document.createElementNS(svgNS, "path");
+    p.setAttribute("d", "M-8,-7 L8,0 L-8,7 Z");
+    p.setAttribute("class", "ring-arrow");
+    p.setAttribute("transform", `translate(${x},${y}) rotate(${ang})`);
+    svg.appendChild(p);
+  });
+  const marker = document.createElementNS(svgNS, "circle");
+  marker.setAttribute("r", 9); marker.setAttribute("class", "ring-marker"); marker.id = "marker";
+  svg.appendChild(marker);
+
+  const ring = $("#ring");
+  STEPS.forEach((s, i) => {
+    const p = pos(i);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = `node ${MODES[s.mode].cls}` + (i === STEPS.length - 1 ? " last" : "");
+    b.style.left = (p.x / 600 * 100) + "%";
+    b.style.top = (p.y / 500 * 100) + "%";
+    b.setAttribute("aria-pressed", "false");
+    b.setAttribute("aria-label", `Step ${i + 1}: ${s.label} (${MODES[s.mode].name})`);
+    b.innerHTML = `<span class="num">STEP ${i + 1}</span><span class="label">${s.label}</span>`;
+    b.addEventListener("click", () => { stopPlay(); select(i); });
+    ring.appendChild(b);
+  });
+}
+
+function select(i) {
+  current = (i + STEPS.length) % STEPS.length;
+  const s = STEPS[current];
+  document.querySelectorAll(".node").forEach((n, k) => n.setAttribute("aria-pressed", k === current ? "true" : "false"));
+  const p = pos(current);
+  const m = $("#marker");
+  // place the marker just inside the ring, toward the centre
+  m.setAttribute("cx", CX + (p.x - CX) * 0.62);
+  m.setAttribute("cy", CY + (p.y - CY) * 0.62);
+  renderPanel(s, current);
+  highlightCurve();
+}
+
+function li(item) {
+  if (Array.isArray(item)) return `<li><span class="ds">DualSense</span>${item[1]}</li>`;
+  return `<li>${item}</li>`;
+}
+function renderPanel(s, i) {
+  const panel = $("#panel");
+  panel.className = `panel ${MODES[s.mode].cls}`;
+  const dots = [1,2,3,4,5].map(n => `<i class="${n <= s.intensity ? "on" : ""}"></i>`).join("");
+  panel.innerHTML = `
+    <span class="mode-tag">${MODES[s.mode].name} · step ${i + 1} of ${STEPS.length}</span>
+    <h3>${s.label}</h3>
+    <p class="fantasy">${s.fantasy}</p>
+    <h4>What the player does</h4>
+    <ul>${s.does.map(li).join("")}</ul>
+    <h4>Emotional beat</h4>
+    <div class="beat"><div class="dots" aria-label="Intensity ${s.intensity} of 5">${dots}</div><span>${s.beat}</span></div>
+    <h4>Readable for ages 5–10</h4>
+    <ul>${s.kids.map(li).join("")}</ul>
+    <h4>Open questions</h4>
+    <ul>${s.questions.map(li).join("")}</ul>
+    ${s.feeds ? `<div class="feeds">↪ ${s.feeds}</div>` : ""}
+  `;
+}
+
+/* ---------- Play ---------- */
+let playTimer = null, playCount = 0;
+function stopPlay() {
+  if (playTimer) { clearInterval(playTimer); playTimer = null; $("#playBtn").textContent = "▶ Play the loop"; }
+}
+$("#playBtn").addEventListener("click", () => {
+  if (playTimer) return stopPlay();
+  playCount = 0;
+  select(0);
+  $("#playBtn").textContent = "■ Stop";
+  playTimer = setInterval(() => {
+    playCount++;
+    select(current + 1);
+    if (playCount >= STEPS.length) stopPlay();
+  }, 2200);
+});
+
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea")) return;
+  if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); stopPlay(); select(current + 1); focusNode(); }
+  if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); stopPlay(); select(current - 1); focusNode(); }
+});
+function focusNode() {
+  if (document.activeElement && document.activeElement.classList.contains("node")) {
+    document.querySelectorAll(".node")[current].focus();
+  }
+}
+
+/* ---------- Emotion curve ---------- */
+const CW = 700, CH = 200, PADL = 40, PADR = 30, TOP = 20, BOT = 50;
+function cx(i) { return PADL + i * (CW - PADL - PADR) / STEPS.length; }
+function cy(v) { return TOP + (5 - v) / 4 * (CH - TOP - BOT); }
+function buildCurve() {
+  const svg = $("#curve");
+  const pts = STEPS.map((s, i) => [cx(i), cy(s.intensity)]);
+  pts.push([cx(STEPS.length), cy(STEPS[0].intensity)]); // wrap to next lap
+  let html = "";
+  [1, 3, 5].forEach(v => {
+    html += `<line class="curve-grid" x1="${PADL}" x2="${CW - PADR}" y1="${cy(v)}" y2="${cy(v)}"/>`;
+    html += `<text class="curve-axis" x="${PADL - 10}" y="${cy(v) + 4}" text-anchor="end">${v}</text>`;
+  });
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0] + "," + p[1]).join(" ");
+  html += `<path class="curve-area" d="${d} L${pts[pts.length-1][0]},${CH - BOT} L${pts[0][0]},${CH - BOT} Z"/>`;
+  html += `<path class="curve-line" d="${d}"/>`;
+  html += `<circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="6" fill="none" stroke="var(--accent)" stroke-dasharray="3 3" stroke-width="2"/>`;
+  html += `<text class="curve-lbl" x="${pts[pts.length-1][0]}" y="${CH - 18}">next lap…</text>`;
+  STEPS.forEach((s, i) => {
+    const short = s.label.replace("Unlock Biome: Virtual Tour", "Be the Dino").replace("Unlock New Dig Location", "New Site").replace("Choose Location", "Choose").replace("Dig Out a Bone", "Dig").replace("Clear the Bone", "Clear").replace("Assemble Dinosaur", "Assemble");
+    html += `<circle class="curve-pt" data-i="${i}" cx="${cx(i)}" cy="${cy(s.intensity)}" r="8" tabindex="0" role="button" aria-label="${s.label}, intensity ${s.intensity}"/>`;
+    html += `<text class="curve-lbl" data-l="${i}" x="${cx(i)}" y="${CH - 18}">${short}</text>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".curve-pt").forEach(c => {
+    const go = () => { stopPlay(); select(+c.dataset.i); document.getElementById("loop-h").scrollIntoView({ behavior: "smooth" }); };
+    c.addEventListener("click", go);
+    c.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+}
+function highlightCurve() {
+  document.querySelectorAll(".curve-pt").forEach(c => {
+    const on = +c.dataset.i === current;
+    c.classList.toggle("active", on); c.setAttribute("r", on ? 11 : 8);
+  });
+  document.querySelectorAll("[data-l]").forEach(t => t.classList.toggle("active", +t.dataset.l === current));
+}
+
+/* ---------- Transformation ---------- */
+function setStage(n) {
+  $("#stageSlider").value = n;
+  document.querySelectorAll("#stageArt svg").forEach(s => s.style.opacity = +s.dataset.stage === n ? 1 : 0);
+  document.querySelectorAll("#stageLabels span").forEach(s => s.classList.toggle("on", +s.dataset.s === n));
+  const st = STAGES[n];
+  const links = [["dig", "clear"], ["assemble"], ["biome"]][n];
+  $("#stageCopy").innerHTML = `<h3>${st.title}</h3><p>${st.text}</p>
+    <div class="tags">${links.map(id => { const i = STEPS.findIndex(s => s.id === id); return `<button type="button" class="tag ${MODES[STEPS[i].mode].cls}" data-go="${i}">Step ${i+1}: ${STEPS[i].label}</button>`; }).join("")}</div>`;
+}
+$("#stageSlider").addEventListener("input", e => setStage(+e.target.value));
+document.querySelectorAll("#stageLabels span").forEach(s => s.addEventListener("click", () => setStage(+s.dataset.s)));
+
+/* ---------- Pillars ---------- */
+function buildPillars() {
+  $("#pillars").innerHTML = PILLARS.map(p => `
+    <div class="pillar">
+      <div class="icon" aria-hidden="true">${p.icon}</div>
+      <h3>${p.title}</h3>
+      <p>${p.text}</p>
+      <div class="tags">${p.steps.map(id => { const i = STEPS.findIndex(s => s.id === id); return `<button type="button" class="tag ${MODES[STEPS[i].mode].cls}" data-go="${i}">${i+1}. ${STEPS[i].label}</button>`; }).join("")}</div>
+    </div>`).join("");
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-go]");
+  if (!t) return;
+  stopPlay(); select(+t.dataset.go);
+  document.getElementById("loop-h").scrollIntoView({ behavior: "smooth" });
+});
+
+/* ---------- Questions checklist ---------- */
+const QKEY = "dinodig-cd-questions-v1";
+function loadQ() { try { return JSON.parse(localStorage.getItem(QKEY)) || {}; } catch { return {}; } }
+function saveQ(o) { try { localStorage.setItem(QKEY, JSON.stringify(o)); } catch {} }
+function buildQs() {
+  const state = loadQ();
+  $("#qs").innerHTML = STEPS.map((s, i) => `
+    <div class="qgroup ${MODES[s.mode].cls}">
+      <h3>${i + 1}. ${s.label}</h3>
+      ${s.questions.map((q, k) => {
+        const key = s.id + ":" + k, on = !!state[key];
+        return `<label class="${on ? "done" : ""}"><input type="checkbox" data-k="${key}" ${on ? "checked" : ""}><span>${q}</span></label>`;
+      }).join("")}
+    </div>`).join("");
+  $("#qs").querySelectorAll("input").forEach(cb => cb.addEventListener("change", () => {
+    const st = loadQ(); st[cb.dataset.k] = cb.checked; saveQ(st);
+    cb.parentElement.classList.toggle("done", cb.checked); updateQCount();
+  }));
+  updateQCount();
+}
+function updateQCount() {
+  const all = document.querySelectorAll("#qs input"), done = document.querySelectorAll("#qs input:checked");
+  $("#qCount").textContent = `${done.length} / ${all.length} decided`;
+  $("#qBar").style.width = (all.length ? done.length / all.length * 100 : 0) + "%";
+}
+$("#qReset").addEventListener("click", () => { saveQ({}); buildQs(); });
+
+/* ---------- Theme ---------- */
+$("#themeToggle").addEventListener("click", () => {
+  const root = document.documentElement;
+  const cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+});
+
+buildRing();
+buildCurve();
+buildPillars();
+buildQs();
+setStage(0);
+select(0);
+</script>
+</body>
+</html>
